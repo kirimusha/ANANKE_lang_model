@@ -1,0 +1,15 @@
+# 1. Создаем виртуальное окружение в папке проекта
+python3 -m venv venv
+
+# 2. Активируем его
+source venv/bin/activate
+
+# 3. Теперь pip будет работать внутри окружения
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+pip install nltk
+
+# 4. Запускаем ваш скрипт
+python main_from_book.py
+
+# 5. Когда закончите работу, деактивируйте окружение
+deactivate

@@ -3,15 +3,41 @@ import random
 
 def encode(s: list, vocab: list) -> torch.tensor:
     """
-    Encode a list of tokens into a tensor of integers, given a fixed vocabulary. 
-    When a token is not found in the vocabulary, the special unknown token is assigned. 
-    When the training set did not use that special token, a random token is assigned.
+    Кодирует список токенов в тензор целых чисел с использованием словаря.
+    
+    Каждый токен заменяется на его индекс в словаре. Если токена нет в словаре,
+    используется специальный токен <UNK>. Если токен <UNK> тоже отсутствует в словаре,
+    используется случайный индекс.
+
+    Параметры:
+    
+    s : list
+        Список токенов для кодирования
+    vocab : list
+        Словарь (список уникальных токенов)
+    
+    Возвращает:
+    
+    torch.tensor
+        Тензор типа long с индексами токенов
     """
-    rand_token = random.randint(0, len(vocab))
-
+    # Генерируем случайный индекс на случай, если <UNK> нет в словаре
+    rand_token = random.randint(0, len(vocab))  # Случайное число от 0 до len(vocab)
+    
+    # Определяем специальный токен для неизвестных слов
     unknown_token = "<UNK>"
-
-    map = {s:i for i,s in enumerate(vocab)}
-    enc = [map.get(c, map.get(unknown_token, rand_token)) for c in s]
+    
+    # Создаём словарь "токен -> индекс" из словаря vocab
+    # Пример: vocab = ["кот", "собака"] -> {"кот": 0, "собака": 1}
+    map = {token: idx for idx, token in enumerate(vocab)}
+    
+    # Кодируем каждый токен:
+    # 1. Если токен есть в словаре -> берём его индекс
+    # 2. Если нет -> пробуем взять индекс <UNK>
+    # 3. Если <UNK> тоже нет -> используем случайный индекс
+    enc = [map.get(token, map.get(unknown_token, rand_token)) for token in s]
+    
+    # Преобразуем список индексов в тензор PyTorch
     enc = torch.tensor(enc, dtype=torch.long)
+    
     return enc

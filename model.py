@@ -2,10 +2,11 @@ import torch
 import torch.nn as nn
 import math
 
-# ---------- Устройство ----------
+# Устройство, преносим на куду (граф процессор), у меня его нет, 
+# так что код будет выполняться на моём бедненьком Intel Core i5-10210U CPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# ---------- Scaled Dot-Product Attention ----------
+# Scaled Dot-Product Attention
 def attention(query, key, value, mask=None, dropout=None):
     d_k = query.size(-1)
     scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)
@@ -16,7 +17,7 @@ def attention(query, key, value, mask=None, dropout=None):
         p_attn = dropout(p_attn)
     return torch.matmul(p_attn, value), p_attn
 
-# ---------- Multi-Head Attention ----------
+# Multi-Head Attention
 class MultiHeadAttention(nn.Module):
     def __init__(self, h, d_model, dropout=0.1):
         super().__init__()
@@ -38,7 +39,7 @@ class MultiHeadAttention(nn.Module):
         x = x.transpose(1, 2).contiguous().view(nbatches, -1, self.h * self.d_k)
         return self.linears[-1](x)
 
-# ---------- Position-wise Feed Forward ----------
+# Position-wise Feed Forward
 class PositionwiseFeedForward(nn.Module):
     def __init__(self, d_model, d_ff, dropout=0.1):
         super().__init__()
@@ -49,7 +50,7 @@ class PositionwiseFeedForward(nn.Module):
     def forward(self, x):
         return self.linear2(self.dropout(torch.relu(self.linear1(x))))
 
-# ---------- Positional Encoding ----------
+# Positional Encoding
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, dropout=0.1, max_len=5000):
         super().__init__()
@@ -66,7 +67,7 @@ class PositionalEncoding(nn.Module):
         x = x + self.pe[:, :x.size(1)]
         return self.dropout(x)
 
-# ---------- Encoder Layer ----------
+# Encoder Layer
 class EncoderLayer(nn.Module):
     def __init__(self, d_model, self_attn, feed_forward, dropout):
         super().__init__()
@@ -81,7 +82,7 @@ class EncoderLayer(nn.Module):
         x = self.norm2(x + self.dropout(self.feed_forward(x)))
         return x
 
-# ---------- Decoder Layer ----------
+# Decoder Layer
 class DecoderLayer(nn.Module):
     def __init__(self, d_model, self_attn, src_attn, feed_forward, dropout):
         super().__init__()
@@ -99,7 +100,7 @@ class DecoderLayer(nn.Module):
         x = self.norm3(x + self.dropout(self.feed_forward(x)))
         return x
 
-# ---------- Encoder ----------
+# Энкодер
 class Encoder(nn.Module):
     def __init__(self, layer, N):
         super().__init__()
@@ -111,7 +112,7 @@ class Encoder(nn.Module):
             x = layer(x, mask)
         return self.norm(x)
 
-# ---------- Decoder ----------
+# Декодер
 class Decoder(nn.Module):
     def __init__(self, layer, N):
         super().__init__()
@@ -123,9 +124,9 @@ class Decoder(nn.Module):
             x = layer(x, memory, src_mask, tgt_mask)
         return self.norm(x)
 
-# ---------- Полная модель ----------
+# Полная модель
 class Transformer(nn.Module):
-    def __init__(self, src_vocab, tgt_vocab, d_model=512, N=6, d_ff=2048, h=8, dropout=0.1):
+    def __init__(self, src_vocab, tgt_vocab, d_model=256, N=2, d_ff=512, h=4, dropout=0.1):
         super().__init__()
         self.src_embed = nn.Sequential(
             nn.Embedding(src_vocab, d_model),
